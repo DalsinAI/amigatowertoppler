@@ -26,6 +26,7 @@
 #include "highscore.h"
 
 #include <stdexcept>
+#include <ctime>
 
 #if ENABLE_NLS == 1
 #include <libintl.h>
@@ -71,8 +72,19 @@ static void startgame(void) {
   gam_done();
 }
 
+#ifdef __amigaos__
+extern "C" {
+void amiga_screens_snapshot(void);
+void amiga_screens_close_leftovers(void);
+void amiga_message(const char *title, const char *text);
+}
+#endif
+
 static void QuitFunction(void) {
   SDL_Quit();
+#ifdef __amigaos__
+  amiga_screens_close_leftovers();
+#endif
 }
 
 int main(int argc, char *argv[]) {
@@ -83,7 +95,22 @@ int main(int argc, char *argv[]) {
   // to the right spot without a lot of jiggery pokery.
   // - jasonk@toast442.org
 
+#ifdef __amigaos__
+  {
+    FILE *f = open_data_file("toppler.dat");
+    if (!f) {
+      const char *msg = "Tower Toppler can't find toppler.dat.\n\n"
+                        "It goes in the Toppler drawer, beside the program.";
+      fprintf(stderr, "%s\n", msg);
+      amiga_message("Tower Toppler", msg);
+      return 20;
+    }
+    dataarchive = std::make_unique<archive>(f);
+  }
+  amiga_screens_snapshot();
+#else
   dataarchive = std::make_unique<archive>(open_data_file("toppler.dat"));
+#endif
 
 #if ENABLE_NLS == 1
   setlocale(LC_MESSAGES, "");

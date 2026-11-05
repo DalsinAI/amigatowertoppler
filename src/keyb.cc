@@ -179,6 +179,13 @@ static void handleEvents(void) {
 
       if (e.key.state == SDL_PRESSED) {
 
+#ifdef __amigaos__
+        /* Right Amiga+Q quits from anywhere, as the window's close
+         * gadget does */
+        if (e.key.keysym.sym == SDLK_q && (e.key.keysym.mod & KMOD_RGUI))
+          exit(0);
+#endif
+
         sdlkeytyped = e.key.keysym.sym;
 
         keydown = (ttkey)(keydown | key);

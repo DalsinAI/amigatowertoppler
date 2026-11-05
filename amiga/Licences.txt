@@ -1,0 +1,30 @@
+Tower Toppler: licences
+=======================
+
+The game: Tower Toppler (Nebulus) 1.3 by Andreas Röver and Pasi
+Kallinen, with graphics partly by Bastian Salmela, music by Angel Keha and
+missions by Clarence Ball (AUTHORS), https://gitlab.com/roever/toppler,
+commit c8bf02b0f8bf8875a454758227bf2bfc029487c3. A remake of Nebulus by
+John M. Phillips (Hewson, 1987); it holds nothing of the original game.
+
+- The program (src/) is under the GNU General Public License, version 2
+  or (at your option) any later version, as each source file says; the
+  licence text upstream ships is the GPL version 3 (COPYING.txt).
+- toppler.dat (the graphics, sounds, fonts and the missions) is built from
+  datafile/ in the same GPL source tree (upstream's Makefile and datafile/
+  README make it; the prebuilt file is upstream's own, unchanged).
+- toppler.ogg (the title music, Angel Keha) comes in the same tree, under
+  the same GPL; upstream gives no other licence for any of its data, and
+  Debian distributes the whole package, data and music included, in main
+  (its debian/copyright gives the GPL, Copyright 2000-2022 Andreas Röver,
+  and no other licence).
+- The icons (amiga/icons/) are drawn from upstream's dist/toppler40.xpm
+  and are under the same GPL.
+- The Amiga port's own files (amiga/) are GPL 2 or later, like the game.
+  amiga/amiga_screens.c and amiga/amiga_message.c come from the AmiCradle
+  Team's Seven Kingdoms and Abbaye ports.
+
+At run time the program uses GFOpenGPU's SDL2.module and SDL2_mixer.module
+(SDL 2 and SDL_mixer: zlib licence) and is linked with zlib (zlib
+licence); the modules are installed with GFOpenGPU and are not part of
+this drawer.

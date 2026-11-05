@@ -28,6 +28,8 @@
 
 #include "decl.h"
 
+#include <algorithm>
+
 #ifdef _WIN32
 #include <direct.h>
 #endif
@@ -225,19 +227,24 @@ void lev_findmissions() {
     pathname = pathname + "\\";
   }
 
+#elif defined(__amigaos__)
+  /* the current directory: "" in AmigaDOS (PROGDIR: comes below) */
+  std::string pathname = "";
 #else
   std::string pathname = "./";
 #endif
 
+#ifndef __amigaos__
   for (auto & e : alpha_scandir(pathname, missionfiles))
       add_mission(e);
+#endif
 
 #ifndef _WIN32
 
-  for (auto & e : alpha_scandir(homedir() + "/.toppler/", missionfiles))
+  for (auto & e : alpha_scandir(local_dir(), missionfiles))
       add_mission(e);
 
-  for (auto & e : alpha_scandir(std::string(TOP_DATADIR) + "/", missionfiles))
+  for (auto & e : alpha_scandir(data_dir(), missionfiles))
       add_mission(e);
 
 #endif

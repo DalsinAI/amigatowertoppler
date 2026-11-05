@@ -21,6 +21,7 @@
 
 #include <SDL.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <sys/stat.h>
@@ -93,6 +94,16 @@ bool dcl_fileexists(const std::string & n) {
     return false;
 }
 
+#ifdef __amigaos__
+/* AmigaOS: the data is in the program's drawer, the player's files in its
+ * User drawer (PROGDIR: is the drawer itself, so no "/" goes between). */
+std::string data_dir() { return "PROGDIR:"; }
+std::string local_dir() { return "PROGDIR:User/"; }
+#else
+std::string data_dir() { return std::string(TOP_DATADIR) + "/"; }
+std::string local_dir() { return homedir() + "/.toppler/"; }
+#endif
+
 std::string homedir()
 {
 
@@ -111,7 +122,18 @@ std::string homedir()
 /* checks if home/.toppler exists and creates it, if not */
 static void checkdir(void) {
 
-#ifndef _WIN32
+#ifdef __amigaos__
+
+  std::string n = "PROGDIR:User";
+
+  DIR *d = opendir(n.c_str());
+
+  if (!d)
+    mkdir(n.c_str(), S_IRWXU);
+  else
+    closedir(d);
+
+#elif !defined(_WIN32)
 
   std::string n = homedir() + "/.toppler";
 
@@ -136,7 +158,7 @@ FILE *open_data_file(const std::string & name) {
     return fopen(name.c_str(), "rb");
 
   // look into the data dir
-  std::string n = std::string(TOP_DATADIR) + "/" + name;
+  std::string n = data_dir() + name;
 
   if (dcl_fileexists(n))
     f = fopen(n.c_str(), "rb");
@@ -163,7 +185,7 @@ bool get_data_file_path(const std::string & name, std::string & f) {
   }
 
   // look into the data dir
-  std::string n = std::string(TOP_DATADIR) + "/" + name;
+  std::string n = data_dir() + name;
 
   if (dcl_fileexists(n)) {
     f = n;
@@ -191,7 +213,7 @@ std::string local_file_name(const std::string & name)
 #endif
 
 #ifndef _WIN32
-  return homedir() + "/.toppler/" + name;
+  return local_dir() + name;
 #else
   return name;
 #endif
@@ -247,7 +269,14 @@ std::vector<std::string> alpha_scandir(const std::string & path, std::function<b
     {
         std::string n = i->d_name;
         if (filter(n))
-            entries.push_back(path + "/" + i->d_name);
+        {
+            /* AmigaDOS reads "//" as the parent drawer: no second "/" after
+             * a path that ends in one (or in a volume's ":") */
+            if (!path.empty() && (path.back() == '/' || path.back() == ':'))
+                entries.push_back(path + i->d_name);
+            else
+                entries.push_back(path + "/" + i->d_name);
+        }
     }
     ::closedir(dir);
     std::sort(entries.begin(), entries.end());

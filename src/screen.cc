@@ -661,7 +661,12 @@ void scr_reinit() {
 
   doneWindow();
 
+#ifdef __amigaos__
+  /* a screen of the game's own size, not the Workbench's */
+  SDL_CreateWindowAndRenderer(SCREENWID, SCREENHEI, config.fullscreen() ? SDL_WINDOW_FULLSCREEN : 0, &sdlWindow, &sdlRenderer);
+#else
   SDL_CreateWindowAndRenderer(SCREENWID, SCREENHEI, config.fullscreen() ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0, &sdlWindow, &sdlRenderer);
+#endif
   SDL_SetWindowMinimumSize(sdlWindow, 640, 480);
   SDL_SetWindowTitle(sdlWindow, "Nebulus");
   SDL_SetWindowResizable(sdlWindow, SDL_TRUE);

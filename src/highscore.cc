@@ -134,7 +134,7 @@ static void loadscores(FILE *f)
 
 static bool hsc_lock(void)
 {
-#ifndef _WIN32
+#ifdef HISCOREDIR
 
   if (globalHighscore)
   {
@@ -160,7 +160,7 @@ static bool hsc_lock(void)
 
 static void hsc_unlock(void)
 {
-#ifndef _WIN32
+#ifdef HISCOREDIR
 
   // free the lock
   if (globalHighscore)
@@ -184,8 +184,7 @@ void hsc_init(void) {
 
     /* asume we use local highscore table */
     globalHighscore = false;
-    highscoreName = homedir();
-    highscoreName += std::string("/.toppler/");
+    highscoreName = local_dir();
     highscoreName += SCOREFNAME;
 
     /* now check if we have access to a global highscore table */

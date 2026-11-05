@@ -184,6 +184,10 @@ FILE *create_local_config_file(const std::string & name);
 FILE *open_local_data_file(const std::string & name);
 FILE *create_local_data_file(const std::string & name);
 std::string homedir();
+/* where the game's data is, and the player's own files, each with its
+ * separator at the end */
+std::string data_dir();
+std::string local_dir();
 
 /* returns the filename that would be opened with open_data_file in
  * f, f is max len characters
