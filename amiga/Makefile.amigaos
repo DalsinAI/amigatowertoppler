@@ -1,0 +1,84 @@
+# Tower Toppler for AmigaOS 3.x, 68040/68060 + FPU, on GFOpenGPU's SDL 2
+# (with SDL2_mixer for the music and the sounds).
+#
+#   make -f amiga/Makefile.amigaos -j2 [STOVE=/path/to/os32-gcc16-open6]
+#
+# STOVE is a GFOpenAmigaGCC 16.2.0-open6 stove: its prefix/ has the
+# compiler, the NDK and GFOpenGPU's SDL 2 kit (prefix/m68k-amigaos), and
+# zlib under prefix/m68k-amigaos/port-deps. SDL2KIT and ZLIB may name them
+# elsewhere. The data is upstream's prebuilt toppler.dat and toppler.ogg,
+# read from PROGDIR:; the settings, the high scores and the player's own
+# missions go to PROGDIR:User/.
+#
+# Output: build/amigaos/Toppler/ (the drawer: toppler, toppler.dat,
+# toppler.ogg, ReadMe, the licences, User/, with GlowIcons),
+# build/amigaos/Toppler.info and Install-Toppler beside them.
+
+STOVE   ?= $(HOME)/AmiCradle/stoves/os32-gcc16-open6
+PREFIX  ?= $(STOVE)/prefix
+SDL2KIT ?= $(PREFIX)/m68k-amigaos
+ZLIB    ?= $(PREFIX)/m68k-amigaos/port-deps
+CC      = $(PREFIX)/bin/m68k-amigaos-gcc
+CXX     = $(PREFIX)/bin/m68k-amigaos-g++
+CPU     ?= -m68040 -m68881
+# -fno-tree-loop-distribute-patterns: GCC 16's loop miscompile (the kit's
+# sdl2-config gives it for GCC 16 too).
+OPT     ?= -O2 -fomit-frame-pointer -fno-tree-loop-distribute-patterns
+
+VERSION := $(shell cat src/version)
+# As upstream's Makefile, but no gettext (the game's English text) and
+# no global high score folder.
+DEFS    = -D__amigaos__ -DVERSION='"$(VERSION)"' -DTOP_DATADIR='"PROGDIR:"' -DENABLE_NLS=0
+INC     = -Iamiga -Isrc -I$(SDL2KIT)/include/SDL2 -I$(ZLIB)/include
+COMMON  = -noixemul $(OPT) $(CPU) $(DEFS)
+CXXFLAGS = $(COMMON) -std=gnu++17 $(INC)
+CFLAGS   = $(COMMON) -std=gnu99
+AMIGAWARN = -Wall -Wextra
+LDFLAGS = -noixemul $(CPU)
+# libstdc++'s exception support calls pthread (the stove's libpthread).
+LIBS    = -L$(SDL2KIT)/lib -L$(ZLIB)/lib -lSDL2_mixer -lSDL2 -lz -lm -lpthread
+
+BUILD   = build/amigaos
+OBJDIR  = $(BUILD)/obj
+OUT     = $(BUILD)/Toppler
+PROG    = toppler
+
+# Upstream's list: every src/*.cc.
+SRC     = $(wildcard src/*.cc)
+OBJS    = $(SRC:%.cc=$(OBJDIR)/%.o) \
+          $(OBJDIR)/amiga/amiga_screens.o $(OBJDIR)/amiga/amiga_message.o \
+          $(OBJDIR)/amiga/stack.o
+
+all: $(OUT)/$(PROG) package
+
+$(OUT)/$(PROG): $(OBJS)
+	@mkdir -p $(OUT)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+package: $(OUT)/$(PROG) toppler.dat toppler.ogg AMIGA_PORT.md COPYING README.md amiga/Licences.txt
+	mkdir -p $(OUT)/User
+	cp toppler.dat toppler.ogg $(OUT)/
+	cp AMIGA_PORT.md $(OUT)/ReadMe
+	cp README.md $(OUT)/ReadMe-toppler
+	cp COPYING $(OUT)/COPYING.txt
+	cp amiga/Licences.txt $(OUT)/Licences.txt
+	cp amiga/icons/toppler.info amiga/icons/ReadMe.info $(OUT)/
+	for f in ReadMe-toppler COPYING.txt Licences.txt; do cp amiga/icons/ReadMe.info $(OUT)/$$f.info; done
+	cp amiga/icons/Data.info $(OUT)/User.info
+	cp amiga/icons/Toppler-drawer.info $(BUILD)/Toppler.info
+	cp amiga/installer/Install-Toppler amiga/installer/Install-Toppler.info $(BUILD)/
+
+$(OBJDIR)/amiga/%.o: amiga/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(AMIGAWARN) -c -o $@ $<
+
+$(OBJDIR)/src/%.o: src/%.cc $(wildcard src/*.h) src/version
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+objs: $(OBJS)
+
+clean:
+	rm -rf $(BUILD)
+
+.PHONY: all package objs clean
