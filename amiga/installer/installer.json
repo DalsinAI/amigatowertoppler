@@ -9,6 +9,6 @@
   "modules": ["SDL2.module", "SDL2_mixer.module"],
   "keep": ["User"],
   "parent": "Work:Games",
-  "badge": "../icons/art/toppler.png",
+  "badge": "../icons/art/towertoppler.png",
   "script": "Install-Toppler"
 }
